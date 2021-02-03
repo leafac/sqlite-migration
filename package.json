@@ -1,7 +1,7 @@
 {
   "name": "@leafac/sqlite-migration",
   "version": "0.0.0",
-  "description": "Migration system for @leafac/sqlite",
+  "description": "A bare-bones migration system for @leafac/sqlite",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": "leafac/sqlite-migration",

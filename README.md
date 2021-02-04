@@ -3,7 +3,7 @@
 <p align="center">
 <a href="https://github.com/leafac/sqlite-migration"><img src="https://img.shields.io/badge/Source---" alt="Source"></a>
 <a href="https://www.npmjs.com/package/@leafac/sqlite-migration"><img alt="Package" src="https://badge.fury.io/js/%40leafac%2Fsqlite-migration.svg"></a>
-<a href="https://github.com/leafac/sqlite-migrations/actions"><img src="https://github.com/leafac/sqlite-migrations/workflows/.github/workflows/main.yml/badge.svg" alt="Continuous Integration"></a>
+<a href="https://github.com/leafac/sqlite-migration/actions"><img src="https://github.com/leafac/sqlite-migration/workflows/.github/workflows/main.yml/badge.svg" alt="Continuous Integration"></a>
 </p>
 
 ### Installation

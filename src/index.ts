@@ -12,9 +12,9 @@ export default (database: Database, migrations: Query[]): number => {
 
   let executedMigrationsCount: number;
   try {
-    executedMigrationsCount = database.get<{ executedMigrationsCount: number }>(
-      sql`SELECT seq as executedMigrationsCount FROM sqlite_sequence WHERE name = 'leafac_migrations'`
-    ).executedMigrationsCount;
+    executedMigrationsCount = database.get<{ seq: number }>(
+      sql`SELECT seq FROM sqlite_sequence WHERE name = ${"leafac_migrations"}`
+    ).seq;
   } catch (error) {
     executedMigrationsCount = 0;
   }
@@ -24,23 +24,23 @@ export default (database: Database, migrations: Query[]): number => {
 
   if (executedMigrationsCount !== executedMigrations.length)
     throw new Error(
-      `The number of executed migrations (${executedMigrationsCount}) doesn’t match the number of rows in the leafac_migrations table (${executedMigrations.length}). Did you delete rows from the leafac_migrations table? If so, you must reinsert them before trying to migrate again.`
+      `The AUTOINCREMENT sequence of the leafac_migrations table (${executedMigrationsCount}) doesn’t match its number of rows (${executedMigrations.length}). Did you delete rows from the leafac_migrations table? If so, you must reinsert them before trying to migrate again.`
     );
-  if (executedMigrationsCount > migrations.length)
+  if (migrations.length < executedMigrationsCount)
     throw new Error(
-      `The number of executed migrations (${executedMigrationsCount}) is greater than the number of migrations provided (${migrations.length})`
+      `The number of migrations provided (${migrations.length}) is less than the number of migrations that have already run in the database (${executedMigrationsCount}). Did you forget to pass some of the migrations?`
     );
 
   for (let index = 0; index < executedMigrationsCount; index++) {
-    const executedMigration = executedMigrations[index];
     const migration = migrations[index];
-    if (executedMigration.source !== migration.source)
+    const executedMigration = executedMigrations[index];
+    if (migration.source !== executedMigration.source)
       throw new Error(
-        `Migration (index = ${index}, id = ${
+        `Migration index ${index} is different from leafac_migrations row ${
           index + 1
-        }) is different in the leafac_migrations table from what was passed in migrations.\nleafac_migrations table:\n${
+        }.\nMigration:\n${migration.source}\nleafac_migrations:\n${
           executedMigration.source
-        }\nMigration:\n${migration.source}`
+        }`
       );
   }
 
@@ -59,9 +59,7 @@ export default (database: Database, migrations: Query[]): number => {
       });
     } catch (error) {
       throw new Error(
-        `Error running migration (index = ${index}, would have been id = ${
-          index + 1
-        }).\nMigration: ${JSON.stringify(
+        `Error running migration ${index}.\nMigration: ${JSON.stringify(
           migration,
           undefined,
           2

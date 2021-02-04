@@ -177,13 +177,13 @@ test("Delete migrations from leafac_migrations", () => {
   expect(() => {
     databaseMigrate(database, migrations);
   }).toThrowErrorMatchingInlineSnapshot(
-    `"The number of executed migrations (1) doesn’t match the number of rows in the leafac_migrations table (0). Did you delete rows from the leafac_migrations table? If so, you must reinsert them before trying to migrate again."`
+    `"The AUTOINCREMENT sequence of the leafac_migrations table (1) doesn’t match its number of rows (0). Did you delete rows from the leafac_migrations table? If so, you must reinsert them before trying to migrate again."`
   );
 
   database.close();
 });
 
-test("More migrations in leafac_migrations than passed in", () => {
+test("Pass fewer migrations than already run", () => {
   const database = new Database(":memory:");
 
   databaseMigrate(database, [
@@ -192,7 +192,7 @@ test("More migrations in leafac_migrations than passed in", () => {
   expect(() => {
     databaseMigrate(database, []);
   }).toThrowErrorMatchingInlineSnapshot(
-    `"The number of executed migrations (1) is greater than the number of migrations provided (0)"`
+    `"The number of migrations provided (0) is less than the number of migrations that have already run in the database (1). Did you forget to pass some of the migrations?"`
   );
 
   database.close();
@@ -207,11 +207,11 @@ test("Change a migration", () => {
   expect(() => {
     databaseMigrate(database, [sql`SOMETHING ELSE;`]);
   }).toThrowErrorMatchingInlineSnapshot(`
-    "Migration (index = 0, id = 1) is different in the leafac_migrations table from what was passed in migrations.
-    leafac_migrations table:
-    CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);
+    "Migration index 0 is different from leafac_migrations row 1.
     Migration:
-    SOMETHING ELSE;"
+    SOMETHING ELSE;
+    leafac_migrations:
+    CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);"
   `);
 
   database.close();
@@ -223,7 +223,7 @@ test("Invalid SQL", () => {
   expect(() => {
     databaseMigrate(database, [sql`I AM INVALID SQL;`]);
   }).toThrowErrorMatchingInlineSnapshot(`
-    "Error running migration (index = 0, would have been id = 1).
+    "Error running migration 0.
     Migration: {
       \\"source\\": \\"I AM INVALID SQL;\\",
       \\"parameters\\": []

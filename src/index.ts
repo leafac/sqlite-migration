@@ -7,10 +7,10 @@ export interface Migration {
 
 export default (database: Database, migrations: Query[]): number => {
   database.execute(
-    sql`CREATE TABLE IF NOT EXISTS migrations (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT);`
+    sql`CREATE TABLE IF NOT EXISTS leafac_migrations (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL);`
   );
   const executedMigrations = database.all<Migration>(
-    sql`SELECT * FROM migrations ORDER BY id`
+    sql`SELECT id, source FROM leafac_migrations ORDER BY id`
   );
 
   if (executedMigrations.length > migrations.length)
@@ -22,9 +22,9 @@ export default (database: Database, migrations: Query[]): number => {
     executedMigrationIndex < executedMigrations.length;
     executedMigrationIndex++
   ) {
-    const id = executedMigrationIndex + 1;
     const executedMigration = executedMigrations[executedMigrationIndex];
     const migration = migrations[executedMigrationIndex];
+    const id = executedMigrationIndex + 1;
     if (executedMigration.id !== id)
       throw new Error(
         `Migrations corrupted: Migration with id ${id} is missing from the database`
@@ -35,15 +35,13 @@ export default (database: Database, migrations: Query[]): number => {
       );
   }
 
-  for (const migration of migrations.slice(executedMigrations.length)) {
-    // FIXME: Use executeTransaction()
-    database.transaction(() => {
+  for (const migration of migrations.slice(executedMigrations.length))
+    database.executeTransaction(() => {
       database.execute(migration);
       database.run(
-        sql`INSERT INTO migrations (source) VALUES (${migration.source})`
+        sql`INSERT INTO leafac_migrations (source) VALUES (${migration.source})`
       );
-    })();
-  }
+    });
 
   return migrations.length - executedMigrations.length;
 };

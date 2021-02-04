@@ -1,7 +1,7 @@
 {
   "name": "@leafac/sqlite-migration",
   "version": "0.0.0",
-  "description": "A bare-bones migration system for @leafac/sqlite",
+  "description": "A lightweight migration system for @leafac/sqlite",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "repository": "leafac/sqlite-migration",
@@ -28,7 +28,7 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "@leafac/sqlite": "^1.0.1"
+    "@leafac/sqlite": "^1.1.1"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^5.4.1",

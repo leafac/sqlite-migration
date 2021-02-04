@@ -1,65 +1,85 @@
 <h1 align="center">@leafac/sqlite-migration</h1>
-<h3 align="center"><a href="https://npm.im/better-sqlite3">better-sqlite3</a> with <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals">tagged template literals</a></h3>
+<h3 align="center">A lightweight migration system for <a href="https://npm.im/@leafac/sqlite">@leafac/sqlite</a></h3>
 <p align="center">
-<a href="https://github.com/leafac/sqlite"><img src="https://img.shields.io/badge/Source---" alt="Source"></a>
-<a href="https://www.npmjs.com/package/@leafac/sqlite-migration"><img alt="Package" src="https://badge.fury.io/js/%40leafac%2Fsqlite.svg"></a>
-<a href="https://github.com/leafac/sqlite/actions"><img src="https://github.com/leafac/sqlite/workflows/.github/workflows/main.yml/badge.svg" alt="Continuous Integration"></a>
+<a href="https://github.com/leafac/sqlite-migration"><img src="https://img.shields.io/badge/Source---" alt="Source"></a>
+<a href="https://www.npmjs.com/package/@leafac/sqlite-migration"><img alt="Package" src="https://badge.fury.io/js/%40leafac%2Fsqlite-migration.svg"></a>
+<a href="https://github.com/leafac/sqlite-migrations/actions"><img src="https://github.com/leafac/sqlite-migrations/workflows/.github/workflows/main.yml/badge.svg" alt="Continuous Integration"></a>
 </p>
 
 ### Installation
 
 ```console
-$ npm install @leafac/sqlite-migration
+$ npm install @leafac/sqlite @leafac/sqlite-migration
 ```
-
-Use @leafac/sqlite-migration with [the es6-string-html Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=Tobermory.es6-string-html) for syntax highlighting the queries in the tagged template literals.
 
 ### Features, Usage, and Example
 
-@leafac/sqlite-migration is a [thin wrapper (< 100 lines of code)](src/index.ts) around better-sqlite3 which adds native TypeScript support (no need for `@types/...`) and the `sql` tagged template literal, for example:
+@leafac/sqlite-migration provides a `databaseMigrate()` function which you must call with a @leafac/sqlite database and an array of migrations. For example:
 
 ```typescript
-import { Database, sql } from "@leafac/sqlite-migration";
+import { Database, sql } from "@leafac/sqlite";
+import databaseMigrate from "@leafac/sqlite-migration";
 
 const database = new Database(":memory:");
-database.execute(
-  sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);`
-);
+
+// First time running migration.
 console.log(
-  database.run(sql`INSERT INTO users (name) VALUES (${"Leandro Facchinetti"})`)
-); // => { changes: 1, lastInsertRowid: 1 }
-console.log(database.get<{ name: string }>(sql`SELECT * from users`)); // => { id: 1, name: 'Leandro Facchinetti' }
+  databaseMigrate(database, [
+    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+  ])
+); // => 1
+
+// Run it again, and nothing changes. For best results, run databaseMigrate() at your application startup.
+console.log(
+  databaseMigrate(database, [
+    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+  ])
+); // => 0
+
+// At some point in the future, a new migration comes in.
+console.log(
+  databaseMigrate(database, [
+    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    sql`CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);`,
+  ])
+); // => 1
 ```
 
-The `Database` class is subclass of a better-sqlite3 database, so all [better-sqlite3 database’s methods](https://github.com/JoshuaWise/better-sqlite3/blob/master/docs/api.md#class-database) are available in `Database`.
+The `databaseMigrate()` function returns the number of migrations that were executed.
+
+#### No Down Migrations
+
+Most migration systems (if not all), provide a way to **undo** migrations; something called **down** migrations. @leafac/sqlite-migration doesn’t provide a down migration mechanism.
+
+I believe that down migrations are more trouble to maintain (they can be a lot of work!) than they’re worth, particularly in small applications. Why? Because down migrations have two main selling points:
+
+1. You may go back and forward with the database schema in development (think of alternating back and forth while working on different feature branches that change the database schema).
+2. You may rollback a deployment that goes wrong in production.
+
+But I don’t think these selling points hold up:
+
+1. You may recreate the database from scratch whenever you need in development.
+2. You almost never want to run a down migration in production because that would make you lose data.
+
+In case something goes wrong, @leafac/sqlite-migration requires you to write a new migration that undoes the troublesome previous migration. The only way through is forward!
 
 ### How It Works
 
-The `sql` tag produces a data structure with the source of the query along with the parameters, for example, the following query:
+@leafac/sqlite-migration creates a table in your database with the following schema:
 
-```javascript
-sql`INSERT INTO users (name) VALUES (${"Leandro Facchinetti"})`;
+```sql
+CREATE TABLE IF NOT EXISTS leafacMigrations (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL);
 ```
 
-becomes the following data structure:
+When migrating, it checks the migrations that you passed against the ones stored in the `leafacMigrations`. Any inconsistencies cause errors, and any new migration is run and stored for next time.
 
-```json
-{
-  "source": "INSERT INTO users (name) VALUES (?)",
-  "parameters": ["Leandro Facchinetti"]
-}
-```
-
-The `Database` keeps a map from query sources to better-sqlite3 prepared statements (cache, memoization). To run a query, `Database` picks up on the data structure produced by the `sql` tag and looks for the query source in the map; if it’s a hit, then `Database` reuses the prepared statement and only binds the new parameters; otherwise `Database` creates the prepared statement, uses it, and stores it for later.
-
-There’s no cache eviction policy in @leafac/sqlite-migration. The prepared statements for every query ever ran hang around in memory for as long as the database object is alive (the statements aren’t eligible for garbage collection because they’re in the map). In most cases, that’s fine because there are only a limited number of queries; it’s the bound parameters that change. If that becomes a problem for you, you may access the cache under the `statements` property and implement your own cache eviction policy.
+You must never manipulate `leafacMigrations` by hand; most likely that’ll lead to a corrupted migration state.
 
 ### Related Projects
 
+- <https://npm.im/@leafac/sqlite>: [better-sqlite3](https://npm.im/better-sqlite3) with tagged template literals. That’s the package to which @leafac/sqlite-migration adds a migration system.
 - <https://npm.im/@leafac/html>: Use tagged template literals as an HTML template engine.
 
 ### Prior Art
 
-- <https://npm.im/better-sqlite3>: @leafac/sqlite-migration is a thin wrapper around better-sqlite3. The main differences are the support for tagged template literals and the native TypeScript support.
-- <https://npm.im/sql-template-strings>: This was the inspiration for using tagged template literals in this way. Unfortunately, sql-template-strings is incompatible with better-sqlite3, thus @leafac/sqlite-migration.
-- <https://npm.im/html-template-tag>: I love (and stole) the idea of using `$${...}` to mark safe interpolation from html-template-tag.
+- <https://npm.im/sqlite>, and <https://npm.im/better-sqlite3-helper>: These packages include lightweight migration systems. @leafac/sqlite-migration is even more lightweight: It doesn’t support **down** migrations and it requires the migrations to be passed as an array, as opposed to, for example, being stored in SQL files. (But you can come up with this array in any way you want, including, for example, reading from a bunch of SQL files.) Also, these other packages don’t support @leafac/sqlite and its `sql` tagged template literal (naturally).

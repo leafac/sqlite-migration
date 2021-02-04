@@ -7,24 +7,24 @@ export interface Migration {
 
 export default (database: Database, migrations: Query[]): number => {
   database.execute(
-    sql`CREATE TABLE IF NOT EXISTS leafac_migrations (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL);`
+    sql`CREATE TABLE IF NOT EXISTS leafacMigrations (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL);`
   );
 
   let executedMigrationsCount: number;
   try {
     executedMigrationsCount = database.get<{ seq: number }>(
-      sql`SELECT seq FROM sqlite_sequence WHERE name = ${"leafac_migrations"}`
+      sql`SELECT seq FROM sqlite_sequence WHERE name = ${"leafacMigrations"}`
     ).seq;
   } catch (error) {
     executedMigrationsCount = 0;
   }
   const executedMigrations = database.all<Migration>(
-    sql`SELECT id, source FROM leafac_migrations ORDER BY id`
+    sql`SELECT id, source FROM leafacMigrations ORDER BY id`
   );
 
   if (executedMigrationsCount !== executedMigrations.length)
     throw new Error(
-      `The AUTOINCREMENT sequence of the leafac_migrations table (${executedMigrationsCount}) doesn’t match its number of rows (${executedMigrations.length}). Did you manipulate the leafac_migrations table by hand? If so, you must get to a consistent state before trying to migrate again.`
+      `The AUTOINCREMENT sequence of the leafacMigrations table (${executedMigrationsCount}) doesn’t match its number of rows (${executedMigrations.length}). Did you manipulate the leafacMigrations table by hand? If so, you must get to a consistent state before trying to migrate again.`
     );
   if (migrations.length < executedMigrationsCount)
     throw new Error(
@@ -36,9 +36,9 @@ export default (database: Database, migrations: Query[]): number => {
     const executedMigration = executedMigrations[index];
     if (migration.source !== executedMigration.source)
       throw new Error(
-        `Migration index ${index} is different from leafac_migrations row ${
+        `Migration index ${index} is different from leafacMigrations row ${
           index + 1
-        }.\nMigration:\n${migration.source}\nleafac_migrations:\n${
+        }.\nMigration:\n${migration.source}\nleafacMigrations:\n${
           executedMigration.source
         }`
       );
@@ -54,7 +54,7 @@ export default (database: Database, migrations: Query[]): number => {
       database.executeTransaction(() => {
         database.execute(migration);
         database.run(
-          sql`INSERT INTO leafac_migrations (source) VALUES (${migration.source})`
+          sql`INSERT INTO leafacMigrations (source) VALUES (${migration.source})`
         );
       });
     } catch (error) {

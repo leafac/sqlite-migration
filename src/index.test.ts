@@ -6,7 +6,7 @@ test("No migrations", () => {
   const database = new Database(":memory:");
   expect(databaseMigrate(database, [])).toMatchInlineSnapshot(`0`);
   expect(
-    database.all(sql`SELECT * FROM leafac_migrations`)
+    database.all(sql`SELECT * FROM leafacMigrations`)
   ).toMatchInlineSnapshot(`Array []`);
   database.close();
 });
@@ -22,7 +22,7 @@ test("One migration run twice", () => {
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafac_migrations`))
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
@@ -36,7 +36,7 @@ test("One migration run twice", () => {
   );
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
-  expect(database.all(sql`SELECT * FROM leafac_migrations`))
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
@@ -67,7 +67,7 @@ test("Multiple migrations run twice", () => {
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`2`);
-  expect(database.all(sql`SELECT * FROM leafac_migrations`))
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
@@ -88,7 +88,7 @@ test("Multiple migrations run twice", () => {
   );
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
-  expect(database.all(sql`SELECT * FROM leafac_migrations`))
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
@@ -128,7 +128,7 @@ test("One migration and then two", () => {
   expect(
     databaseMigrate(database, migrations.slice(0, 1))
   ).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafac_migrations`))
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
@@ -145,7 +145,7 @@ test("One migration and then two", () => {
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafac_migrations`))
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
@@ -168,7 +168,7 @@ test("One migration and then two", () => {
   database.close();
 });
 
-test("Insert a migration into leafac_migrations by hand", () => {
+test("Insert a migration into leafacMigrations by hand", () => {
   const database = new Database(":memory:");
   const migrations = [
     sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
@@ -177,7 +177,7 @@ test("Insert a migration into leafac_migrations by hand", () => {
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
   expect(
     database.run(
-      sql`INSERT INTO leafac_migrations (id, source) VALUES (200, ${"FAKE MIGRATION;"})`
+      sql`INSERT INTO leafacMigrations (id, source) VALUES (200, ${"FAKE MIGRATION;"})`
     )
   ).toMatchInlineSnapshot(`
     Object {
@@ -188,20 +188,20 @@ test("Insert a migration into leafac_migrations by hand", () => {
   expect(() => {
     databaseMigrate(database, migrations);
   }).toThrowErrorMatchingInlineSnapshot(
-    `"The AUTOINCREMENT sequence of the leafac_migrations table (200) doesn’t match its number of rows (2). Did you manipulate the leafac_migrations table by hand? If so, you must get to a consistent state before trying to migrate again."`
+    `"The AUTOINCREMENT sequence of the leafacMigrations table (200) doesn’t match its number of rows (2). Did you manipulate the leafacMigrations table by hand? If so, you must get to a consistent state before trying to migrate again."`
   );
 
   database.close();
 });
 
-test("Delete a migration from leafac_migrations by hand", () => {
+test("Delete a migration from leafacMigrations by hand", () => {
   const database = new Database(":memory:");
   const migrations = [
     sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
   ];
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
-  expect(database.run(sql`DELETE FROM leafac_migrations WHERE id = ${1}`))
+  expect(database.run(sql`DELETE FROM leafacMigrations WHERE id = ${1}`))
     .toMatchInlineSnapshot(`
     Object {
       "changes": 1,
@@ -211,7 +211,7 @@ test("Delete a migration from leafac_migrations by hand", () => {
   expect(() => {
     databaseMigrate(database, migrations);
   }).toThrowErrorMatchingInlineSnapshot(
-    `"The AUTOINCREMENT sequence of the leafac_migrations table (1) doesn’t match its number of rows (0). Did you manipulate the leafac_migrations table by hand? If so, you must get to a consistent state before trying to migrate again."`
+    `"The AUTOINCREMENT sequence of the leafacMigrations table (1) doesn’t match its number of rows (0). Did you manipulate the leafacMigrations table by hand? If so, you must get to a consistent state before trying to migrate again."`
   );
 
   database.close();
@@ -245,10 +245,10 @@ test("Change a migration", () => {
   expect(() => {
     databaseMigrate(database, [sql`SOMETHING ELSE;`]);
   }).toThrowErrorMatchingInlineSnapshot(`
-    "Migration index 0 is different from leafac_migrations row 1.
+    "Migration index 0 is different from leafacMigrations row 1.
     Migration:
     SOMETHING ELSE;
-    leafac_migrations:
+    leafacMigrations:
     CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);"
   `);
 
@@ -273,7 +273,7 @@ test("Invalid SQL", () => {
       sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
     ])
   ).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafac_migrations`))
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
     .toMatchInlineSnapshot(`
     Array [
       Object {

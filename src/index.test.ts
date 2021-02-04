@@ -4,7 +4,7 @@ import databaseMigrate from ".";
 
 test("No migrations", () => {
   const database = new Database(":memory:");
-  databaseMigrate(database, []);
+  expect(databaseMigrate(database, [])).toMatchInlineSnapshot();
   expect(
     database.all(sql`SELECT * FROM leafac_migrations`)
   ).toMatchInlineSnapshot(`Array []`);
@@ -21,7 +21,7 @@ test("One migration run twice", () => {
     database.all(sql`SELECT * FROM users`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
 
-  databaseMigrate(database, migrations);
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -35,7 +35,7 @@ test("One migration run twice", () => {
     `Array []`
   );
 
-  databaseMigrate(database, migrations);
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -66,7 +66,7 @@ test("Multiple migrations run twice", () => {
     database.all(sql`SELECT * FROM threads`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
-  databaseMigrate(database, migrations);
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -87,7 +87,7 @@ test("Multiple migrations run twice", () => {
     `Array []`
   );
 
-  databaseMigrate(database, migrations);
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -125,7 +125,9 @@ test("One migration and then two", () => {
     database.all(sql`SELECT * FROM threads`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
-  databaseMigrate(database, migrations.slice(0, 1));
+  expect(
+    databaseMigrate(database, migrations.slice(0, 1))
+  ).toMatchInlineSnapshot();
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -142,7 +144,7 @@ test("One migration and then two", () => {
     database.all(sql`SELECT * FROM threads`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
-  databaseMigrate(database, migrations);
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -172,7 +174,7 @@ test("Delete migrations from leafac_migrations", () => {
     sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
   ];
 
-  databaseMigrate(database, migrations);
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
   database.execute(sql`DELETE FROM leafac_migrations WHERE id = 1`);
   expect(() => {
     databaseMigrate(database, migrations);
@@ -186,9 +188,11 @@ test("Delete migrations from leafac_migrations", () => {
 test("Pass fewer migrations than already run", () => {
   const database = new Database(":memory:");
 
-  databaseMigrate(database, [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
-  ]);
+  expect(
+    databaseMigrate(database, [
+      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    ])
+  ).toMatchInlineSnapshot();
   expect(() => {
     databaseMigrate(database, []);
   }).toThrowErrorMatchingInlineSnapshot(
@@ -201,9 +205,11 @@ test("Pass fewer migrations than already run", () => {
 test("Change a migration", () => {
   const database = new Database(":memory:");
 
-  databaseMigrate(database, [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
-  ]);
+  expect(
+    databaseMigrate(database, [
+      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    ])
+  ).toMatchInlineSnapshot();
   expect(() => {
     databaseMigrate(database, [sql`SOMETHING ELSE;`]);
   }).toThrowErrorMatchingInlineSnapshot(`
@@ -230,9 +236,11 @@ test("Invalid SQL", () => {
     }
     Error: SqliteError: near \\"I\\": syntax error"
   `);
-  databaseMigrate(database, [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
-  ]);
+  expect(
+    databaseMigrate(database, [
+      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    ])
+  ).toMatchInlineSnapshot();
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [

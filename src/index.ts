@@ -24,7 +24,7 @@ export default (database: Database, migrations: Query[]): number => {
 
   if (executedMigrationsCount !== executedMigrations.length)
     throw new Error(
-      `The AUTOINCREMENT sequence of the leafac_migrations table (${executedMigrationsCount}) doesn’t match its number of rows (${executedMigrations.length}). Did you delete rows from the leafac_migrations table? If so, you must reinsert them before trying to migrate again.`
+      `The AUTOINCREMENT sequence of the leafac_migrations table (${executedMigrationsCount}) doesn’t match its number of rows (${executedMigrations.length}). Did you manipulate the leafac_migrations table by hand? If so, you must get to a consistent state before trying to migrate again.`
     );
   if (migrations.length < executedMigrationsCount)
     throw new Error(

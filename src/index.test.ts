@@ -4,7 +4,7 @@ import databaseMigrate from ".";
 
 test("No migrations", () => {
   const database = new Database(":memory:");
-  expect(databaseMigrate(database, [])).toMatchInlineSnapshot();
+  expect(databaseMigrate(database, [])).toMatchInlineSnapshot(`0`);
   expect(
     database.all(sql`SELECT * FROM leafac_migrations`)
   ).toMatchInlineSnapshot(`Array []`);
@@ -21,7 +21,7 @@ test("One migration run twice", () => {
     database.all(sql`SELECT * FROM users`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
 
-  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -35,7 +35,7 @@ test("One migration run twice", () => {
     `Array []`
   );
 
-  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -66,7 +66,7 @@ test("Multiple migrations run twice", () => {
     database.all(sql`SELECT * FROM threads`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
-  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`2`);
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -87,7 +87,7 @@ test("Multiple migrations run twice", () => {
     `Array []`
   );
 
-  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -127,7 +127,7 @@ test("One migration and then two", () => {
 
   expect(
     databaseMigrate(database, migrations.slice(0, 1))
-  ).toMatchInlineSnapshot();
+  ).toMatchInlineSnapshot(`1`);
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -144,7 +144,7 @@ test("One migration and then two", () => {
     database.all(sql`SELECT * FROM threads`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
-  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [
@@ -168,18 +168,50 @@ test("One migration and then two", () => {
   database.close();
 });
 
-test("Delete migrations from leafac_migrations", () => {
+test("Insert a migration into leafac_migrations by hand", () => {
   const database = new Database(":memory:");
   const migrations = [
     sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
   ];
 
-  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot();
-  database.execute(sql`DELETE FROM leafac_migrations WHERE id = 1`);
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
+  expect(
+    database.run(
+      sql`INSERT INTO leafac_migrations (id, source) VALUES (200, ${"FAKE MIGRATION;"})`
+    )
+  ).toMatchInlineSnapshot(`
+    Object {
+      "changes": 1,
+      "lastInsertRowid": 200,
+    }
+  `);
   expect(() => {
     databaseMigrate(database, migrations);
   }).toThrowErrorMatchingInlineSnapshot(
-    `"The AUTOINCREMENT sequence of the leafac_migrations table (1) doesn’t match its number of rows (0). Did you delete rows from the leafac_migrations table? If so, you must reinsert them before trying to migrate again."`
+    `"The AUTOINCREMENT sequence of the leafac_migrations table (200) doesn’t match its number of rows (2). Did you manipulate the leafac_migrations table by hand? If so, you must get to a consistent state before trying to migrate again."`
+  );
+
+  database.close();
+});
+
+test("Delete a migration from leafac_migrations by hand", () => {
+  const database = new Database(":memory:");
+  const migrations = [
+    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+  ];
+
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
+  expect(database.run(sql`DELETE FROM leafac_migrations WHERE id = ${1}`))
+    .toMatchInlineSnapshot(`
+    Object {
+      "changes": 1,
+      "lastInsertRowid": 1,
+    }
+  `);
+  expect(() => {
+    databaseMigrate(database, migrations);
+  }).toThrowErrorMatchingInlineSnapshot(
+    `"The AUTOINCREMENT sequence of the leafac_migrations table (1) doesn’t match its number of rows (0). Did you manipulate the leafac_migrations table by hand? If so, you must get to a consistent state before trying to migrate again."`
   );
 
   database.close();
@@ -192,7 +224,7 @@ test("Pass fewer migrations than already run", () => {
     databaseMigrate(database, [
       sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
     ])
-  ).toMatchInlineSnapshot();
+  ).toMatchInlineSnapshot(`1`);
   expect(() => {
     databaseMigrate(database, []);
   }).toThrowErrorMatchingInlineSnapshot(
@@ -209,7 +241,7 @@ test("Change a migration", () => {
     databaseMigrate(database, [
       sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
     ])
-  ).toMatchInlineSnapshot();
+  ).toMatchInlineSnapshot(`1`);
   expect(() => {
     databaseMigrate(database, [sql`SOMETHING ELSE;`]);
   }).toThrowErrorMatchingInlineSnapshot(`
@@ -240,7 +272,7 @@ test("Invalid SQL", () => {
     databaseMigrate(database, [
       sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
     ])
-  ).toMatchInlineSnapshot();
+  ).toMatchInlineSnapshot(`1`);
   expect(database.all(sql`SELECT * FROM leafac_migrations`))
     .toMatchInlineSnapshot(`
     Array [

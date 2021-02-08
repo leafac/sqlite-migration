@@ -285,3 +285,87 @@ test("Invalid SQL", () => {
 
   database.close();
 });
+
+test("Invalid SQL because of interpolation", () => {
+  const database = new Database(":memory:");
+
+  expect(() => {
+    databaseMigrate(database, [
+      sql`INSERT INTO users (name) VALUES (${"Leandro Facchinetti"});`,
+    ]);
+  }).toThrowErrorMatchingInlineSnapshot(`
+    "Error running migration 0.
+    Migration: {
+      \\"source\\": \\"INSERT INTO users (name) VALUES (?);\\",
+      \\"parameters\\": [
+        \\"Leandro Facchinetti\\"
+      ]
+    }
+    Error: Error: Failed to execute({
+      \\"source\\": \\"INSERT INTO users (name) VALUES (?);\\",
+      \\"parameters\\": [
+        \\"Leandro Facchinetti\\"
+      ]
+    }) because execute() doesn’t support queries with parameters"
+  `);
+  expect(
+    databaseMigrate(database, [
+      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    ])
+  ).toMatchInlineSnapshot(`1`);
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+    .toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": 1,
+        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+      },
+    ]
+  `);
+
+  database.close();
+});
+
+test("An error rolls back all migrations", () => {
+  const database = new Database(":memory:");
+
+  expect(() => {
+    databaseMigrate(database, [
+      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+      sql`INSERT INTO users (name) VALUES (${"Leandro Facchinetti"});`,
+    ]);
+  }).toThrowErrorMatchingInlineSnapshot(`
+    "Error running migration 1.
+    Migration: {
+      \\"source\\": \\"INSERT INTO users (name) VALUES (?);\\",
+      \\"parameters\\": [
+        \\"Leandro Facchinetti\\"
+      ]
+    }
+    Error: Error: Failed to execute({
+      \\"source\\": \\"INSERT INTO users (name) VALUES (?);\\",
+      \\"parameters\\": [
+        \\"Leandro Facchinetti\\"
+      ]
+    }) because execute() doesn’t support queries with parameters"
+  `);
+  expect(() => {
+    database.all(sql`SELECT * FROM users`);
+  }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
+  expect(
+    databaseMigrate(database, [
+      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    ])
+  ).toMatchInlineSnapshot(`1`);
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+    .toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": 1,
+        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+      },
+    ]
+  `);
+
+  database.close();
+});

@@ -15,7 +15,7 @@ export default (database: Database, migrations: Query[]): number => {
     try {
       executedMigrationsCount = database.get<{ seq: number }>(
         sql`SELECT seq FROM sqlite_sequence WHERE name = ${"leafacMigrations"}`
-      ).seq;
+      )!.seq;
     } catch (error) {
       executedMigrationsCount = 0;
     }

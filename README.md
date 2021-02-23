@@ -83,3 +83,4 @@ You must never manipulate `leafacMigrations` by hand; most likely that’ll lead
 ### Prior Art
 
 - <https://npm.im/sqlite>, and <https://npm.im/better-sqlite3-helper>: These packages include lightweight migration systems. @leafac/sqlite-migration is even more lightweight: It doesn’t support **down** migrations and it requires the migrations to be passed as an array, as opposed to, for example, being stored in SQL files. (But you can come up with this array in any way you want, including, for example, reading from a bunch of SQL files.) Also, these other packages don’t support @leafac/sqlite and its `sql` tagged template literal (naturally).
+- <https://github.com/trevyn/turbosql>: After having published @leafac/sqlite-migration the author of Turbosql [reached out](https://github.com/leafac/sqlite-migration/issues/1) to say that they independently arrived at a similar design, but in the Rust ecosystem instead of Node.js. It’s great to have company!

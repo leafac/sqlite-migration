@@ -52,8 +52,10 @@ test("One migration run twice", () => {
   database.close();
 });
 
-test("Multiple migrations run twice", () => {
+function multipleMigrations(defaultSafeIntegers: boolean) {
   const database = new Database(":memory:");
+  database.defaultSafeIntegers(defaultSafeIntegers);
+
   const migrations = [
     sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
     sql`CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);`,
@@ -66,9 +68,23 @@ test("Multiple migrations run twice", () => {
     database.all(sql`SELECT * FROM threads`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
-  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`2`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
-    .toMatchInlineSnapshot(`
+  function checkMigration() {
+    const all = database.all(sql`SELECT * FROM leafacMigrations`);
+    if (defaultSafeIntegers) {
+      expect(all).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": 1n,
+        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+      },
+      Object {
+        "id": 2n,
+        "source": "CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);",
+      },
+    ]
+  `);
+    } else {
+      expect(all).toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
@@ -80,36 +96,27 @@ test("Multiple migrations run twice", () => {
       },
     ]
   `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
-    `Array []`
-  );
-  expect(database.all(sql`SELECT * FROM threads`)).toMatchInlineSnapshot(
-    `Array []`
-  );
+    }
+
+    expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+      `Array []`
+    );
+    expect(database.all(sql`SELECT * FROM threads`)).toMatchInlineSnapshot(
+      `Array []`
+    );
+  }
+
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`2`);
+  checkMigration();
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
-    .toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
-      },
-      Object {
-        "id": 2,
-        "source": "CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);",
-      },
-    ]
-  `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
-    `Array []`
-  );
-  expect(database.all(sql`SELECT * FROM threads`)).toMatchInlineSnapshot(
-    `Array []`
-  );
+  checkMigration();
 
   database.close();
-});
+}
+test("Multiple migrations run twice", () => multipleMigrations(false));
+test("Multiple migrations run twice, with defaultSafeIntegers", () =>
+  multipleMigrations(true));
 
 test("One migration and then two", () => {
   const database = new Database(":memory:");

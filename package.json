@@ -23,7 +23,7 @@
   },
   "scripts": {
     "test": "prettier --check \"src/**/*\" --end-of-line auto && jest",
-    "prepare": "tsc"
+    "prepare": "npm install @leafac/sqlite && tsc"
   },
   "peerDependencies": {
     "@leafac/sqlite": "^1.3.0"

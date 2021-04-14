@@ -25,22 +25,22 @@ const database = new Database(":memory:");
 // First time running migration.
 console.log(
   databaseMigrate(database, [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
   ])
 ); // => 1
 
 // Run it again, and nothing changes. For best results, run databaseMigrate() at your application startup.
 console.log(
   databaseMigrate(database, [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
   ])
 ); // => 0
 
 // At some point in the future, a new migration comes in.
 console.log(
   databaseMigrate(database, [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
-    sql`CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
+    sql`CREATE TABLE "threads" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "author" INTEGER NOT NULL REFERENCES "user", "title" TEXT NOT NULL);`,
   ])
 ); // => 1
 ```

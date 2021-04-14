@@ -56,7 +56,7 @@ test("Multiple migrations run twice", () => {
   const database = new Database(":memory:");
   const migrations = [
     sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
-    sql`CREATE TABLE "threads" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "author" INTEGER NOT NULL REFERENCES user, "title" TEXT NOT NULL);`,
+    sql`CREATE TABLE "threads" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "author" INTEGER NOT NULL REFERENCES "user", "title" TEXT NOT NULL);`,
   ];
 
   expect(() => {
@@ -76,7 +76,7 @@ test("Multiple migrations run twice", () => {
       },
       Object {
         "id": 2,
-        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES user, \\"title\\" TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES \\"user\\", \\"title\\" TEXT NOT NULL);",
       },
     ]
   `);
@@ -97,7 +97,7 @@ test("Multiple migrations run twice", () => {
       },
       Object {
         "id": 2,
-        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES user, \\"title\\" TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES \\"user\\", \\"title\\" TEXT NOT NULL);",
       },
     ]
   `);
@@ -115,7 +115,7 @@ test("One migration and then two", () => {
   const database = new Database(":memory:");
   const migrations = [
     sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
-    sql`CREATE TABLE "threads" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "author" INTEGER NOT NULL REFERENCES user, "title" TEXT NOT NULL);`,
+    sql`CREATE TABLE "threads" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "author" INTEGER NOT NULL REFERENCES "user", "title" TEXT NOT NULL);`,
   ];
 
   expect(() => {
@@ -154,7 +154,7 @@ test("One migration and then two", () => {
       },
       Object {
         "id": 2,
-        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES user, \\"title\\" TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES \\"user\\", \\"title\\" TEXT NOT NULL);",
       },
     ]
   `);

@@ -369,3 +369,39 @@ test("An error rolls back all migrations", () => {
 
   database.close();
 });
+
+test.skip(".defaultSafeIntegers()", () => {
+  const database = new Database(":memory:");
+  database.defaultSafeIntegers();
+  const migrations = [
+    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+  ];
+
+  expect(() => {
+    database.all(sql`SELECT * FROM users`);
+  }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
+
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
+  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+    .toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": 1n,
+        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+      },
+    ]
+  `);
+  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+    `Array []`
+  );
+
+  expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
+  expect(
+    database.all(sql`SELECT * FROM leafacMigrations`)
+  ).toMatchInlineSnapshot();
+  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+    `Array []`
+  );
+
+  database.close();
+});

@@ -6,7 +6,7 @@ test("No migrations", () => {
   const database = new Database(":memory:");
   expect(databaseMigrate(database, [])).toMatchInlineSnapshot(`0`);
   expect(
-    database.all(sql`SELECT * FROM leafacMigrations`)
+    database.all(sql`SELECT * FROM "leafacMigrations"`)
   ).toMatchInlineSnapshot(`Array []`);
   database.close();
 });
@@ -14,38 +14,38 @@ test("No migrations", () => {
 test("One migration run twice", () => {
   const database = new Database(":memory:");
   const migrations = [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
   ];
 
   expect(() => {
-    database.all(sql`SELECT * FROM users`);
+    database.all(sql`SELECT * FROM "users"`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
     ]
   `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
     ]
   `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );
 
@@ -55,56 +55,56 @@ test("One migration run twice", () => {
 test("Multiple migrations run twice", () => {
   const database = new Database(":memory:");
   const migrations = [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
-    sql`CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
+    sql`CREATE TABLE "threads" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "author" INTEGER NOT NULL REFERENCES user, "title" TEXT NOT NULL);`,
   ];
 
   expect(() => {
-    database.all(sql`SELECT * FROM users`);
+    database.all(sql`SELECT * FROM "users"`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
   expect(() => {
-    database.all(sql`SELECT * FROM threads`);
+    database.all(sql`SELECT * FROM "threads"`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`2`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
       Object {
         "id": 2,
-        "source": "CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES user, \\"title\\" TEXT NOT NULL);",
       },
     ]
   `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );
-  expect(database.all(sql`SELECT * FROM threads`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "threads"`)).toMatchInlineSnapshot(
     `Array []`
   );
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
       Object {
         "id": 2,
-        "source": "CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES user, \\"title\\" TEXT NOT NULL);",
       },
     ]
   `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );
-  expect(database.all(sql`SELECT * FROM threads`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "threads"`)).toMatchInlineSnapshot(
     `Array []`
   );
 
@@ -114,54 +114,54 @@ test("Multiple migrations run twice", () => {
 test("One migration and then two", () => {
   const database = new Database(":memory:");
   const migrations = [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
-    sql`CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
+    sql`CREATE TABLE "threads" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "author" INTEGER NOT NULL REFERENCES user, "title" TEXT NOT NULL);`,
   ];
 
   expect(() => {
-    database.all(sql`SELECT * FROM users`);
+    database.all(sql`SELECT * FROM "users"`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
   expect(() => {
-    database.all(sql`SELECT * FROM threads`);
+    database.all(sql`SELECT * FROM "threads"`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
   expect(
     databaseMigrate(database, migrations.slice(0, 1))
   ).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
     ]
   `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );
   expect(() => {
-    database.all(sql`SELECT * FROM threads`);
+    database.all(sql`SELECT * FROM "threads"`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: threads"`);
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
       Object {
         "id": 2,
-        "source": "CREATE TABLE threads (id INTEGER PRIMARY KEY AUTOINCREMENT, author INTEGER NOT NULL REFERENCES user, title TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"threads\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"author\\" INTEGER NOT NULL REFERENCES user, \\"title\\" TEXT NOT NULL);",
       },
     ]
   `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );
-  expect(database.all(sql`SELECT * FROM threads`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "threads"`)).toMatchInlineSnapshot(
     `Array []`
   );
 
@@ -171,13 +171,13 @@ test("One migration and then two", () => {
 test("Insert a migration into leafacMigrations by hand", () => {
   const database = new Database(":memory:");
   const migrations = [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
   ];
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
   expect(
     database.run(
-      sql`INSERT INTO leafacMigrations (id, source) VALUES (200, ${"FAKE MIGRATION;"})`
+      sql`INSERT INTO "leafacMigrations" ("id", "source") VALUES (${200}, ${"FAKE MIGRATION;"})`
     )
   ).toMatchInlineSnapshot(`
     Object {
@@ -197,11 +197,11 @@ test("Insert a migration into leafacMigrations by hand", () => {
 test("Delete a migration from leafacMigrations by hand", () => {
   const database = new Database(":memory:");
   const migrations = [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
   ];
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
-  expect(database.run(sql`DELETE FROM leafacMigrations WHERE id = ${1}`))
+  expect(database.run(sql`DELETE FROM "leafacMigrations" WHERE "id" = ${1}`))
     .toMatchInlineSnapshot(`
     Object {
       "changes": 1,
@@ -222,7 +222,7 @@ test("Pass fewer migrations than already run", () => {
 
   expect(
     databaseMigrate(database, [
-      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+      sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
     ])
   ).toMatchInlineSnapshot(`1`);
   expect(() => {
@@ -239,7 +239,7 @@ test("Change a migration", () => {
 
   expect(
     databaseMigrate(database, [
-      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+      sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
     ])
   ).toMatchInlineSnapshot(`1`);
   expect(() => {
@@ -249,7 +249,7 @@ test("Change a migration", () => {
     Migration:
     SOMETHING ELSE;
     leafacMigrations:
-    CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);"
+    CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);"
   `);
 
   database.close();
@@ -270,15 +270,15 @@ test("Invalid SQL", () => {
   `);
   expect(
     databaseMigrate(database, [
-      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+      sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
     ])
   ).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
     ]
   `);
@@ -291,18 +291,18 @@ test("Invalid SQL because of interpolation", () => {
 
   expect(() => {
     databaseMigrate(database, [
-      sql`INSERT INTO users (name) VALUES (${"Leandro Facchinetti"});`,
+      sql`INSERT INTO "users" ("name") VALUES (${"Leandro Facchinetti"});`,
     ]);
   }).toThrowErrorMatchingInlineSnapshot(`
     "Error running migration 0.
     Migration: {
-      \\"source\\": \\"INSERT INTO users (name) VALUES (?);\\",
+      \\"source\\": \\"INSERT INTO \\\\\\"users\\\\\\" (\\\\\\"name\\\\\\") VALUES (?);\\",
       \\"parameters\\": [
         \\"Leandro Facchinetti\\"
       ]
     }
     Error: Error: Failed to execute({
-      \\"source\\": \\"INSERT INTO users (name) VALUES (?);\\",
+      \\"source\\": \\"INSERT INTO \\\\\\"users\\\\\\" (\\\\\\"name\\\\\\") VALUES (?);\\",
       \\"parameters\\": [
         \\"Leandro Facchinetti\\"
       ]
@@ -310,15 +310,15 @@ test("Invalid SQL because of interpolation", () => {
   `);
   expect(
     databaseMigrate(database, [
-      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+      sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
     ])
   ).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
     ]
   `);
@@ -331,38 +331,38 @@ test("An error rolls back all migrations", () => {
 
   expect(() => {
     databaseMigrate(database, [
-      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
-      sql`INSERT INTO users (name) VALUES (${"Leandro Facchinetti"});`,
+      sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
+      sql`INSERT INTO "users" ("name") VALUES (${"Leandro Facchinetti"});`,
     ]);
   }).toThrowErrorMatchingInlineSnapshot(`
     "Error running migration 1.
     Migration: {
-      \\"source\\": \\"INSERT INTO users (name) VALUES (?);\\",
+      \\"source\\": \\"INSERT INTO \\\\\\"users\\\\\\" (\\\\\\"name\\\\\\") VALUES (?);\\",
       \\"parameters\\": [
         \\"Leandro Facchinetti\\"
       ]
     }
     Error: Error: Failed to execute({
-      \\"source\\": \\"INSERT INTO users (name) VALUES (?);\\",
+      \\"source\\": \\"INSERT INTO \\\\\\"users\\\\\\" (\\\\\\"name\\\\\\") VALUES (?);\\",
       \\"parameters\\": [
         \\"Leandro Facchinetti\\"
       ]
     }) because execute() doesn’t support queries with parameters"
   `);
   expect(() => {
-    database.all(sql`SELECT * FROM users`);
+    database.all(sql`SELECT * FROM "users"`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
   expect(
     databaseMigrate(database, [
-      sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+      sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
     ])
   ).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
     ]
   `);
@@ -374,32 +374,32 @@ test.skip(".defaultSafeIntegers()", () => {
   const database = new Database(":memory:");
   database.defaultSafeIntegers();
   const migrations = [
-    sql`CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);`,
+    sql`CREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "name" TEXT NOT NULL);`,
   ];
 
   expect(() => {
-    database.all(sql`SELECT * FROM users`);
+    database.all(sql`SELECT * FROM "users"`);
   }).toThrowErrorMatchingInlineSnapshot(`"no such table: users"`);
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`1`);
-  expect(database.all(sql`SELECT * FROM leafacMigrations`))
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
     .toMatchInlineSnapshot(`
     Array [
       Object {
         "id": 1n,
-        "source": "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL);",
+        "source": "CREATE TABLE \"users\" (\"id\" INTEGER PRIMARY KEY AUTOINCREMENT, \"name\" TEXT NOT NULL);",
       },
     ]
   `);
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
   expect(
-    database.all(sql`SELECT * FROM leafacMigrations`)
+    database.all(sql`SELECT * FROM "leafacMigrations"`)
   ).toMatchInlineSnapshot();
-  expect(database.all(sql`SELECT * FROM users`)).toMatchInlineSnapshot(
+  expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );
 

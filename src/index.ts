@@ -14,13 +14,15 @@ export default (database: Database, migrations: Query[]): number => {
     let executedMigrationsCount: number;
     try {
       executedMigrationsCount = database.get<{ seq: number }>(
-        sql`SELECT "seq" FROM "sqlite_sequence" WHERE "name" = ${"leafacMigrations"}`
+        sql`SELECT "seq" FROM "sqlite_sequence" WHERE "name" = ${"leafacMigrations"}`,
+        { safeIntegers: false }
       )!.seq;
     } catch (error) {
       executedMigrationsCount = 0;
     }
     const executedMigrations = database.all<Migration>(
-      sql`SELECT "id", "source" FROM "leafacMigrations" ORDER BY "id"`
+      sql`SELECT "id", "source" FROM "leafacMigrations" ORDER BY "id"`,
+      { safeIntegers: false }
     );
 
     if (executedMigrationsCount !== executedMigrations.length)

@@ -370,7 +370,7 @@ test("An error rolls back all migrations", () => {
   database.close();
 });
 
-test.skip(".defaultSafeIntegers()", () => {
+test(".defaultSafeIntegers()", () => {
   const database = new Database(":memory:");
   database.defaultSafeIntegers();
   const migrations = [
@@ -387,7 +387,7 @@ test.skip(".defaultSafeIntegers()", () => {
     Array [
       Object {
         "id": 1n,
-        "source": "CREATE TABLE \"users\" (\"id\" INTEGER PRIMARY KEY AUTOINCREMENT, \"name\" TEXT NOT NULL);",
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
       },
     ]
   `);
@@ -396,9 +396,15 @@ test.skip(".defaultSafeIntegers()", () => {
   );
 
   expect(databaseMigrate(database, migrations)).toMatchInlineSnapshot(`0`);
-  expect(
-    database.all(sql`SELECT * FROM "leafacMigrations"`)
-  ).toMatchInlineSnapshot();
+  expect(database.all(sql`SELECT * FROM "leafacMigrations"`))
+    .toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "id": 1n,
+        "source": "CREATE TABLE \\"users\\" (\\"id\\" INTEGER PRIMARY KEY AUTOINCREMENT, \\"name\\" TEXT NOT NULL);",
+      },
+    ]
+  `);
   expect(database.all(sql`SELECT * FROM "users"`)).toMatchInlineSnapshot(
     `Array []`
   );

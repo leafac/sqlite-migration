@@ -6,6 +6,8 @@
 <a href="https://github.com/leafac/sqlite-migration/actions"><img src="https://github.com/leafac/sqlite-migration/workflows/.github/workflows/main.yml/badge.svg" alt="Continuous Integration"></a>
 </p>
 
+# Deprecated in favor of [@leafac/sqlite@1.4.0’s `.migrate()` method](https://github.com/leafac/sqlite/tree/25f792a98c154990119e6f2776811ebd074d4a77#a-lightweight-migration-system)
+
 ### Installation
 
 ```console
